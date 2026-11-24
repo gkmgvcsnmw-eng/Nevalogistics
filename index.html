@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Nevalogistics – Track your parcel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#eaf0f4;--surface:#fff;--ink:#0d2540;--muted:#5b6f84;--line:#cfdae3;--accent:#e8591a;--ok:#13766f;--track:#b9c9d6;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0a1726;--surface:#10263d;--ink:#e8f0f7;--muted:#8fa5ba;--line:#24415c;--accent:#ff7a3d;--ok:#3fc2b8;--track:#2d4a66;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0a1726;--surface:#10263d;--ink:#e8f0f7;--muted:#8fa5ba;--line:#24415c;--accent:#ff7a3d;--ok:#3fc2b8;--track:#2d4a66;color-scheme:dark}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Bricolage Grotesque",system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.5}
+.wrap{max-width:720px;margin:0 auto;padding:20px 18px 48px}
+header{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:28px}
+.logo{font-weight:800;font-size:1.35rem;letter-spacing:-.02em}
+.logo span{color:var(--accent)}
+header small{color:var(--muted);font-size:.85rem}
+h1{font-size:clamp(1.9rem,6vw,2.7rem);line-height:1.05;letter-spacing:-.03em;font-weight:800;margin:0 0 8px}
+.lede{color:var(--muted);margin:0 0 20px;max-width:46ch}
+form{display:flex;gap:8px;flex-wrap:wrap}
+input{flex:1 1 220px;min-width:0;font:inherit;font-size:1rem;padding:13px 14px;border:1.5px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink)}
+button{font:inherit;font-weight:600;padding:13px 22px;border:0;border-radius:10px;background:var(--accent);color:#fff;cursor:pointer}
+button:focus-visible,input:focus-visible,.chip:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+.samples{margin:12px 0 0;font-size:.88rem;color:var(--muted)}
+.chip{font:inherit;font-size:.88rem;font-weight:600;color:var(--ink);background:none;border:1px dashed var(--muted);border-radius:8px;padding:3px 9px;margin:2px 4px 2px 0;cursor:pointer}
+#err{display:none;margin-top:16px;padding:12px 14px;border-radius:10px;border:1.5px solid var(--accent);color:var(--ink)}
+#result{display:none;margin-top:28px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:14px}
+.status{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+.status h2{margin:0;font-size:1.4rem;letter-spacing:-.02em}
+.status p{margin:2px 0 0;color:var(--muted);font-size:.95rem}
+.badge{font-weight:600;font-size:.85rem;padding:4px 11px;border-radius:99px;background:var(--ink);color:var(--bg)}
+.route{width:100%;height:auto;display:block;margin-top:8px}
+.route text{font-family:inherit;fill:var(--ink);font-size:13px;font-weight:600}
+.route .sub{fill:var(--muted);font-weight:400;font-size:11px}
+dl{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:14px;margin:0}
+dt{color:var(--muted);font-size:.82rem}
+dd{margin:0;font-weight:600}
+ol{list-style:none;margin:0;padding:0}
+li{position:relative;padding:0 0 18px 26px;border-left:2px solid var(--ok);margin-left:6px}
+li:last-child{padding-bottom:0;border-color:transparent}
+li::before{content:"";position:absolute;left:-7px;top:3px;width:12px;height:12px;border-radius:50%;background:var(--ok)}
+li.pending{border-left:2px dashed var(--track);color:var(--muted)}
+li.pending::before{background:var(--surface);border:2px solid var(--track)}
+li.now::before{background:var(--accent);box-shadow:0 0 0 5px color-mix(in srgb,var(--accent) 25%,transparent)}
+li b{display:block}
+li span{font-size:.88rem;color:var(--muted)}
+.demo{font-size:.8rem;color:var(--muted);text-align:center;margin-top:22px}
+@media (prefers-reduced-motion:no-preference){#dot{transition:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header><div class="logo">Neva<span>logistics</span></div><small>Courier broker · Spain ⇄ Mexico</small></header>
+
+<h1>Where is your parcel?</h1>
+<p class="lede">Enter your Nevalogistics tracking number to see every step from pickup to your door.</p>
+
+<form id="f" autocomplete="off">
+<input id="q" aria-label="Tracking number" placeholder="e.g. NVL-ESMX-740215" autocapitalize="characters" spellcheck="false">
+<button type="submit">Track parcel</button>
+</form>
+<p class="samples">Test numbers:
+<button class="chip" type="button" data-n="NVL-ESMX-740215">NVL-ESMX-740215 (sent today)</button>
+<button class="chip" type="button" data-n="NVL-ESMX-118830">NVL-ESMX-118830 (delivered)</button></p>
+<div id="err" role="alert"></div>
+
+<section id="result" aria-live="polite">
+<div class="card">
+<div class="status"><div><h2 id="st"></h2><p id="stsub"></p></div><span class="badge" id="eta"></span></div>
+<svg class="route" viewBox="0 0 600 190" role="img" aria-label="Route from Spain to Mexico">
+<path id="arc" d="M60,140 Q300,-40 540,130" fill="none" stroke="var(--track)" stroke-width="3" stroke-dasharray="2 8" stroke-linecap="round"/>
+<path id="done" d="M60,140 Q300,-40 540,130" fill="none" stroke="var(--accent)" stroke-width="4" stroke-linecap="round"/>
+<circle cx="60" cy="140" r="7" fill="var(--ink)"/><circle cx="540" cy="130" r="7" fill="var(--ink)"/>
+<circle id="dot" r="10" fill="var(--accent)" stroke="var(--surface)" stroke-width="3"/>
+<text x="60" y="166" text-anchor="middle">Madrid</text><text class="sub" x="60" y="182" text-anchor="middle">Spain</text>
+<text x="540" y="156" text-anchor="middle">Mexico City</text><text class="sub" x="540" y="172" text-anchor="middle">Mexico</text>
+</svg>
+</div>
+<div class="card"><dl>
+<div><dt>Tracking number</dt><dd id="tn"></dd></div>
+<div><dt>Service</dt><dd>Intl. Air Express</dd></div>
+<div><dt>Weight</dt><dd>2.4 kg</dd></div>
+<div><dt>Booked on</dt><dd id="bk"></dd></div>
+</dl></div>
+<div class="card"><ol id="tl"></ol></div>
+</section>
+
+<p class="demo">Test data for demonstration only. No real parcel is linked to these numbers.</p>
+</div>
+
+<script>
+var DB={
+"NVL-ESMX-740215":{status:"Sent from Madrid",sub:"Leaves Madrid (MAD) tonight at 22:30",eta:"Customs tomorrow, 25 Nov",p:.1,booked:"24 Nov 2026",
+ev:[["Shipment booked","Madrid, Spain","Today, 09:12"],["Picked up from sender","Madrid, Spain","Today, 12:40"],["Arrived at Nevalogistics hub","Madrid-Barajas Cargo","Today, 16:05"]],
+pend:[["Departed Spain","Today, 22:30 · Madrid (MAD)"],["Arrived in Mexico","Tomorrow, ~05:00 · Mexico City (MEX)"],["Customs clearance","Tomorrow, 25 Nov · Mexico City"],["Out for delivery","After customs clearance"],["Delivered","Pending"]]},
+"NVL-ESMX-118830":{status:"Delivered",sub:"Signed for at the door, Mexico City",eta:"Delivered 18 Nov",p:1,booked:"11 Nov 2026",
+ev:[["Shipment booked","Madrid, Spain","11 Nov, 10:02"],["Picked up from sender","Madrid, Spain","11 Nov, 17:20"],["Departed Spain","Madrid (MAD)","12 Nov, 23:10"],["Arrived in Mexico","Mexico City (MEX)","13 Nov, 05:25"],["Customs cleared","Mexico City, Mexico","15 Nov, 09:40"],["Out for delivery","Mexico City, Mexico","18 Nov, 08:15"],["Delivered","Mexico City, Mexico","18 Nov, 13:48"]],pend:[]}
+};
+var $=function(i){return document.getElementById(i)};
+function show(raw){
+  var n=raw.trim().toUpperCase().replace(/\s+/g,""),d=DB[n],err=$("err"),res=$("result");
+  if(!n){err.style.display="block";err.textContent="Enter a tracking number to continue.";res.style.display="none";return}
+  if(!d){err.style.display="block";err.textContent="We couldn’t find "+n+". Check the number on your receipt, or try NVL-ESMX-740215.";res.style.display="none";return}
+  err.style.display="none";res.style.display="block";
+  $("st").textContent=d.status;$("stsub").textContent=d.sub;$("eta").textContent=d.eta;$("tn").textContent=n;$("bk").textContent=d.booked;
+  var arc=$("arc"),L=arc.getTotalLength(),pt=arc.getPointAtLength(L*d.p);
+  $("dot").setAttribute("cx",pt.x);$("dot").setAttribute("cy",pt.y);
+  var dn=$("done");dn.style.strokeDasharray=L;dn.style.strokeDashoffset=L*(1-d.p);
+  var h="";
+  for(var i=d.ev.length-1;i>=0;i--){var e=d.ev[i],now=(i===d.ev.length-1&&d.pend.length>0)?" now":"";h+='<li class="'+now+'"><b>'+e[0]+'</b><span>'+e[1]+' · '+e[2]+'</span></li>'}
+  var p="";for(var j=d.pend.length-1;j>=0;j--){p+='<li class="pending"><b>'+d.pend[j][0]+'</b><span>'+d.pend[j][1]+'</span></li>'}
+  $("tl").innerHTML=p+h;
+}
+$("f").addEventListener("submit",function(e){e.preventDefault();show($("q").value)});
+document.querySelectorAll(".chip").forEach(function(c){c.addEventListener("click",function(){$("q").value=c.dataset.n;show(c.dataset.n)})});
+</script>
+</body>
+</html>
